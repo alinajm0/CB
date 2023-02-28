@@ -22,3 +22,17 @@ def add_item(request, data : ProductIn, file: UploadedFile = File(...)):
     data.img = file
     qr = product.objects.create(**data.dict())
     return {'name' : qr.name}
+
+
+
+#delete an item by the id
+
+@api.delete("casher/deleteItem/{product_id}")
+def delete_item(request, product_id: int):
+    try:
+        product.objects.get(id=product_id).delete()
+        return {"message": f"Product with id {product_id} was deleted."}
+    except product.DoesNotExist:
+        return {"message": f"Product with id {product_id} does not exist."}
+    except Exception as e:
+        return {"message": str(e)}
