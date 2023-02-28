@@ -25,6 +25,43 @@ def add_item(request, data : ProductIn, file: UploadedFile = File(...)):
 
 
 
+#get all the items
+@api.get("casher/products")
+def get_all_products(request):
+    products = product.objects.all()
+    return [p.dict() for p in products]
+
+
+
+
+#Update the item
+@api.put("casher/updateItem/{product_id}")
+def update_item(request, product_id: int, data: ProductIn, file: UploadedFile = File(None)):
+    try:
+        product_obj = product.objects.get(id=product_id)
+
+        #Update the fields of the product object based on the request data
+        product_obj.name = data.name
+        product_obj.description = data.description
+        product_obj.price = data.price
+        product_obj.categoryID = data.categoryID
+
+        #If a new image file was uploaded, save it to the product object
+        if file:
+            product_obj.img = file
+
+        product_obj.save()
+
+        return {"message": f"Product with id {product_id} was updated."}
+    
+    except product.DoesNotExist:
+        return {"message": f"Product with id {product_id} does not exist."}
+    
+    except Exception as e:
+        return {"message": str(e)}
+
+
+
 #delete an item by the id
 
 @api.delete("casher/deleteItem/{product_id}")
