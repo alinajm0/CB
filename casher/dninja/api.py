@@ -29,7 +29,8 @@ def add_item(request, data : ProductIn, file: UploadedFile = File(...)):
 @api.get("casher/products")
 def get_all_products(request):
     products = product.objects.all()
-    return [p.dict() for p in products]
+    return [{"id": p.id, **p.dict()} for p in products]
+#get the id in the returned data also
 
 
 
