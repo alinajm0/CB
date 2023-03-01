@@ -33,7 +33,7 @@ class product(models.Model):
     img = models.ImageField(upload_to = images_path)
     description = models.CharField(max_length=100, blank=True)
     price = models.FloatField()
-    categoryID = models.OneToOneField('Category',on_delete=models.SET("Coffee"))
+    CategoryID = models.OneToOneField('Category',on_delete=models.SET("Coffee"))
 
 # ID
 # Name
@@ -54,8 +54,9 @@ class receipt_item(models.Model):
         db_table = 'Receipt_item'
     
     id = models.IntegerField(primary_key=True, db_index=True)
-    product_id = models.OneToOneField(product, on_delete=models.SET("Deleted"))
-    receipt_id = models.ForeignKey('receipt', on_delete=models.SET("Deleted"))
+    item_product_id = models.OneToOneField(product, on_delete=models.SET("Deleted"))
+    item_receipt_id = models.ForeignKey('Receipt', on_delete=models.SET("Deleted"))
+    item_stock_id = models.ForeignKey('Stock', on_delete=models.SET("Deleted"))
     product_date = models.DateTimeField(auto_now_add=True)
     product_price = models.FloatField()
     product_count = models.IntegerField()
@@ -88,3 +89,13 @@ class Receipt(models.Model):
 # price after discount
 # recipt Date
 # customer name 
+
+class Stock(models.Model):
+    class Meta:
+        db_table = 'Stock'
+    id = models.IntegerField(primary_key=True, db_index=True)
+    stock_product_id = models.OneToOneField(product, on_delete=models.SET("Deleted"))
+    stock_price = models.FloatField()
+    remain_notif = models.IntegerField()
+    remain = models.IntegerField()
+    stock_category_id = models.OneToOneField('Category',on_delete=models.SET("Coffee"))
