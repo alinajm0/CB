@@ -6,17 +6,17 @@ from ninja import NinjaAPI, Form, File
 # Create your views here.
 
 api = NinjaAPI()
-
+#User api
 @api.post("CreatUser/")
 def Creat_casher_user(request,data : userIn):
     qr = User.objects.create(**data.dict())
     return {'name': qr.first_name + " " + qr.last_name}
-
+#Category api
 @api.post("casher/addCategory")
 def addCategory(request, data : catIn):
     qr = Category.objects.create(**data.dict())
     return {'name' : qr.name}
-
+#Items api
 @api.post("casher/addItem")
 def add_item(request, data : ProductIn, file: UploadedFile = File(...)):
     data.img = file
