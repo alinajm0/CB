@@ -21,18 +21,31 @@ def addCategory(request, data : catIn):
     return {'name' : qr.name}
 #Items api
 @api.post("casher/addItem")
-def add_item(request, data : ProductIn, file: UploadedFile = File(...)):
+def add_item(request, data: ProductIn, file: UploadedFile = File(...)):
     data.img = file
-    qr = product.objects.create(**data.dict())
-    return {'name' : qr.name}
-
+    categories = Category.objects.filter(id__in=data.CategoryIDs)
+    qr = product.objects.create(name=data.name, img=data.img, description=data.description, price=data.price)
+    qr.CategoryIDs.set(categories)
+    return {'the new product': qr.name,
+            'price':qr.price}
 
 
 #get all the items
 @api.get("casher/products")
 def get_all_products(request):
     products = product.objects.all()
-    return [{"id": p.id, **p.dict()} for p in products]
+    result = []
+    for p in products:
+        categories = [c.name for c in p.CategoryIDs.all()]
+        result.append({
+            'id': p.id,
+            'name': p.name,
+            'img': p.img.url,
+            'description': p.description,
+            'price': p.price,
+            'categories': categories,
+        })
+    return result
 #get the id in the returned data also
 
 

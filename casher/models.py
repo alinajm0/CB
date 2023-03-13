@@ -22,18 +22,19 @@ class User(models.Model):
 # Password
 # IsAdmin
 
-def images_path():
-        return os.path.join(settings.MEDIA_ROOT, 'images/') 
+#def images_path():
+ #      return os.path.join(settings.MEDIA_ROOT, 'images/') 
 class product(models.Model):
     class Meta:
         db_table = 'Product'
     
-    id = models.IntegerField(primary_key=True, db_index=True)
     name = models.CharField(max_length=50)
-    img = models.ImageField(upload_to = images_path)
+    img = models.ImageField(upload_to = 'media/images/' )
     description = models.CharField(max_length=100, blank=True)
     price = models.FloatField()
-    CategoryID = models.OneToOneField('Category',on_delete=models.SET("Coffee"))
+    CategoryIDs = models.ManyToManyField('Category', blank=True)
+    def __str__(self):
+        return self.name
 
 # ID
 # Name
@@ -45,8 +46,9 @@ class product(models.Model):
 class Category(models.Model):
     class Meta:
         db_table = 'Category'
-    id = models.IntegerField(primary_key=True, db_index=True)
     name = models.CharField(max_length=50)
+    def __str__(self):
+        return self.name
 
 
 class receipt_item(models.Model):
