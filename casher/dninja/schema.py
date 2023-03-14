@@ -1,7 +1,7 @@
 from ninja import Schema, ModelSchema, files, File
 from ninja.files import UploadedFile
 from casher.models import product
-from typing import Optional, List
+from typing import Optional, List,Union
 
 class userIn(Schema):
     first_name : str
@@ -19,5 +19,14 @@ class ProductIn(Schema):
     description: str
     price: float
     CategoryIDs: List[int]
-
-    # img : UploadedFile = File(...)
+    #img : UploadedFile = File(...)
+    
+    
+    
+    
+class ProductUpdateIn(Schema):
+    name: Optional[str]
+    img: Optional[Union[str, bytes, UploadedFile]]
+    description: Optional[str]
+    price: Optional[float]
+    CategoryIDs: Optional[List[int]]

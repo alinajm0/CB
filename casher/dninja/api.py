@@ -2,10 +2,12 @@ from django.shortcuts import render
 from ninja.files import UploadedFile
 from django.db.models import Count, Sum
 from django.utils.timezone import now, timedelta
-from .schema import userIn, catIn, ProductIn
+from django.http import HttpResponse
+from .schema import userIn, catIn, ProductIn,ProductUpdateIn
 from casher.models import User, Category, product, Receipt, receipt_item
-from ninja import NinjaAPI, Form, File
+from ninja import NinjaAPI, Form, File,UploadedFile
 from django.utils import timezone
+from typing import Optional, List,Union
 # Create your views here.
 
 api = NinjaAPI()
@@ -14,11 +16,16 @@ api = NinjaAPI()
 def Creat_casher_user(request,data : userIn):
     qr = User.objects.create(**data.dict())
     return {'name': qr.first_name + " " + qr.last_name}
+
+
+
 #Category api
 @api.post("casher/addCategory")
 def addCategory(request, data : catIn):
     qr = Category.objects.create(**data.dict())
     return {'name' : qr.name}
+
+
 #Items api
 @api.post("casher/addItem")
 def add_item(request, data: ProductIn, file: UploadedFile = File(...)):
@@ -53,76 +60,96 @@ def get_all_products(request):
 
 #Update the item
 @api.put("casher/updateItem/{product_id}")
-def update_item(request, product_id: int, data: ProductIn, file: UploadedFile = File(None)):
+def update_product(request, product_id: int, name: Optional[str] = None, img: Optional[UploadedFile] = None, 
+                   description: Optional[str] = None, price: Optional[float] = None, 
+                   CategoryIDs: Union[List[int], None] = None):
     try:
         product_obj = product.objects.get(id=product_id)
-
-        #Update the fields of the product object based on the request data
-        product_obj.name = data.name
-        product_obj.description = data.description
-        product_obj.price = data.price
-        product_obj.categoryID = data.categoryID
-
-        #If a new image file was uploaded, save it to the product object
-        if file:
-            product_obj.img = file
-
-        product_obj.save()
-
-        return {"message": f"Product with id {product_id} was updated."}
-    
     except product.DoesNotExist:
-        return {"message": f"Product with id {product_id} does not exist."}
+        return {"detail": f"Product with id {product_id} does not exist."}
     
-    except Exception as e:
-        return {"message": str(e)}
+    if name:
+        product_obj.name = name
+    if img:
+        product_obj.img = img
+    if description:
+        product_obj.description = description
+    if price:
+        product_obj.price = price
+    if CategoryIDs:
+        product_obj.CategoryIDs.set(CategoryIDs)
+
+    product_obj.save()
+
+    return {"message": f"Product with id {product_id} was updated."}
 
 
 
-#delete an item by the id
-
+#delete by id
 @api.delete("casher/deleteItem/{product_id}")
-def delete_item(request, product_id: int):
+def delete_product(request, product_id: int):
     try:
-        product.objects.get(id=product_id).delete()
-        return {"message": f"Product with id {product_id} was deleted."}
+        product_obj = product.objects.get(id=product_id)
     except product.DoesNotExist:
-        return {"message": f"Product with id {product_id} does not exist."}
-    except Exception as e:
-        return {"message": str(e)}
+        return HttpResponse(f"Product with id {product_id} does not exist.", status=404)
+
+    product_obj.delete()
+
+    return HttpResponse(f"Product with id {product_id} was deleted.")
+
+
+
+
+@api.get("casher/searchProducts")
+def search_products(request, query: str):
+    products = product.objects.filter(name__icontains=query)
+    if not products:
+        return {"detail": "No products found."}
+    result = []
+    for p in products:
+        categories = [c.name for c in p.CategoryIDs.all()]
+        result.append({
+            'name': p.name,
+            'img': p.img.url,
+            'description': p.description,
+            'price': p.price,
+            
+        })
+    return result
+
+
     
-    
-    #Top Seller
-    
-@api.get("casher/top-seller")
-def top_seller(request, date=None, period=None):
-    # set default date to today if none provided
-    if not date:
-        date = timezone.now().date()
-
-    # set default period to day if none provided
-    if not period:
-        period = 'day'
-
-    # filter sales based on the provided date/period
-    if period == 'day':
-        sales = receipt_item.objects.filter(product_date__date=date)
-    elif period == 'week':
-        week_start = date - timezone.timedelta(days=date.weekday())
-        week_end = week_start + timezone.timedelta(days=6)
-        sales = receipt_item.objects.filter(product_date__date__range=[week_start, week_end])
-    elif period == 'year':
-        year_start = timezone.datetime(date.year, 1, 1)
-        year_end = timezone.datetime(date.year, 12, 31, 23, 59, 59)
-        sales = receipt_item.objects.filter(product_date__date__range=[year_start, year_end])
-
-    # get the top seller
-    top_seller = sales.values('item_product_id', 'item_product_id__name') \
-        .annotate(sold_quantity=Sum('product_count')) \
-        .order_by('-sold_quantity') \
-        .first()
-
-    if top_seller:
-        return {"product_name": top_seller['item_product_id__name'], "sold_quantity": top_seller['sold_quantity']}
-    else:
-        return {"message": "No orders found."}
+    #Top Seller //later
+    # 
+# @api.get("casher/top-seller")
+# def top_seller(request, date=None, period=None):
+    #set default date to today if none provided
+    # if not date:
+        # date = timezone.now().date()
+# 
+    #set default period to day if none provided
+    # if not period:
+        # period = 'day'
+# 
+   # filter sales based on the provided date/period
+    # if period == 'day':
+        # sales = receipt_item.objects.filter(product_date__date=date)
+    # elif period == 'week':
+        # week_start = date - timezone.timedelta(days=date.weekday())
+        # week_end = week_start + timezone.timedelta(days=6)
+        # sales = receipt_item.objects.filter(product_date__date__range=[week_start, week_end])
+    # elif period == 'year':
+        # year_start = timezone.datetime(date.year, 1, 1)
+        # year_end = timezone.datetime(date.year, 12, 31, 23, 59, 59)
+        # sales = receipt_item.objects.filter(product_date__date__range=[year_start, year_end])
+# 
+   # get the top seller {Later}
+    # top_seller = sales.values('item_product_id', 'item_product_id__name') \
+        # .annotate(sold_quantity=Sum('product_count')) \
+        # .order_by('-sold_quantity') \
+        # .first()
+# 
+    # if top_seller:
+        # return {"product_name": top_seller['item_product_id__name'], "sold_quantity": top_seller['sold_quantity']}
+    # else:
+        # return {"message": "No orders found."}
