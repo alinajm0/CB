@@ -153,3 +153,20 @@ def search_products(request, query: str):
         # return {"product_name": top_seller['item_product_id__name'], "sold_quantity": top_seller['sold_quantity']}
     # else:
         # return {"message": "No orders found."}
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+@api.get("casher/categories")
+def get_all_categories(request):
+    categories = Category.objects.all()
+    result = [{'id': c.id, 'name': c.name} for c in categories]
+    return result
