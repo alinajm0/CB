@@ -1,6 +1,5 @@
 from ninja import Schema, ModelSchema, files, File
 from ninja.files import UploadedFile
-from casher.models import product
 from typing import Optional, List,Union
 
 class userIn(Schema):
@@ -24,9 +23,38 @@ class ProductIn(Schema):
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
 class ProductUpdateIn(Schema):
     name: Optional[str]
     img: Optional[Union[str, bytes, UploadedFile]]
     description: Optional[str]
     price: Optional[float]
     CategoryIDs: Optional[List[int]]
+    
+
+
+
+
+
+class CreateOrderSchema(Schema):
+    pass
+
+
+class AddItemToOrderSchema(Schema):
+    order_id: int
+    product_id: int
+    quantity: int = 1.0
+    
+
+
+class RemoveItemFromOrderSchema(Schema):
+    order_id: int
+    product_id: int    
